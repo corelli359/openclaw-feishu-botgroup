@@ -1,0 +1,39 @@
+{
+  "name": "openclaw-feishu-botgroup",
+  "version": "0.1.0",
+  "description": "CLI kit for enabling Feishu bot-group agent handoff in OpenClaw.",
+  "license": "MIT",
+  "author": "corelli359",
+  "homepage": "https://github.com/corelli359/openclaw-feishu-botgroup",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/corelli359/openclaw-feishu-botgroup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/corelli359/openclaw-feishu-botgroup/issues"
+  },
+  "bin": {
+    "openclaw-botgroup": "bin/openclaw-botgroup.js"
+  },
+  "files": [
+    "bin",
+    "scripts",
+    "templates",
+    "remote_patch",
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "openclaw",
+    "feishu",
+    "lark",
+    "botgroup",
+    "multi-agent",
+    "agent-handoff"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
