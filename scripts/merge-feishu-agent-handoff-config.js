@@ -19,6 +19,10 @@ function ensureObject(value) {
   return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
+function normalizeName(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function mergeAgentNames(targetCfg, templateCfg) {
   const targetAgents = Array.isArray(targetCfg?.agents?.list)
     ? targetCfg.agents.list
@@ -38,8 +42,9 @@ function mergeAgentNames(targetCfg, templateCfg) {
 
   const nameById = new Map(
     templateAgents
-      .filter((agent) => agent && typeof agent.id === "string" && typeof agent.name === "string")
-      .map((agent) => [agent.id, agent.name])
+      .filter((agent) => agent && typeof agent.id === "string")
+      .map((agent) => [agent.id, normalizeName(agent.name)])
+      .filter(([, name]) => name)
   );
 
   for (const agent of targetAgents) {
@@ -62,10 +67,22 @@ function mergeFeishuAccounts(targetCfg, templateCfg) {
 
   for (const [accountId, templateAccount] of Object.entries(templateAccounts)) {
     const current = ensureObject(targetAccounts[accountId]);
-    targetAccounts[accountId] = {
-      ...current,
-      ...templateAccount
-    };
+    const next = { ...current };
+
+    for (const [key, value] of Object.entries(ensureObject(templateAccount))) {
+      if (key === "name") {
+        const name = normalizeName(value);
+        if (name) {
+          next.name = name;
+        }
+        continue;
+      }
+      next[key] = value;
+    }
+
+    if (Object.keys(next).length > 0) {
+      targetAccounts[accountId] = next;
+    }
   }
 
   targetCfg.channels.feishu.accounts = targetAccounts;

@@ -28,37 +28,39 @@ After the official plugin is installed, continue with:
 After publishing to npm:
 
 ```bash
-npx openclaw-feishu-botgroup install
-npx openclaw-feishu-botgroup merge-config
+npx openclaw-feishu-botgroup setup
 ```
 
 For local development:
 
 ```bash
-node bin/openclaw-botgroup.js install
-node bin/openclaw-botgroup.js merge-config
+node bin/openclaw-botgroup.js setup
 ```
 
 ## Commands
 
 ```bash
+openclaw-botgroup setup
 openclaw-botgroup install
+openclaw-botgroup init-config
 openclaw-botgroup install --openclaw-home ~/.openclaw --no-restart
 openclaw-botgroup merge-config
 openclaw-botgroup print-config-template
 openclaw-botgroup print-agent-template
 ```
 
+- `setup`: recommended entry point; patches the plugin, discovers current bots/accounts, scaffolds a local handoff config, and merges it back into `openclaw.json`
 - `install`: verifies the official Feishu plugin is installed, then copies the patched `openclaw-lark` files
-- `merge-config`: merges the handoff config into `openclaw.json`
-- `print-config-template`: prints the JSON config template
+- `init-config`: discovers current bots/accounts from `openclaw.json` and scaffolds a local handoff config draft
+- `merge-config`: merges the local handoff config into `openclaw.json`
+- `print-config-template`: prints the safe base `agentHandoff` JSON template
 - `print-agent-template`: prints the agent prompt template
 
 ## Recommended Setup
 
 1. Install `openclaw-lark` using the official Feishu guide.
-2. Install the patch.
-3. Merge the config template.
+2. Run `node bin/openclaw-botgroup.js setup`.
+3. During initialization, confirm or fill in each bot's visible name in the Feishu group.
 4. Copy `templates/agent-collaboration.AGENTS.md` into your agent prompt setup.
 5. Restart the gateway.
 6. Test `A -> B` and `A -> B -> C` group workflows.
@@ -75,6 +77,7 @@ openclaw-botgroup print-agent-template
 
 - This is a patch kit, not an upstream OpenClaw release.
 - The official Feishu plugin must be installed before this patch kit is used.
-- Agent IDs and display names in the repository templates are placeholders. In particular, `name` means the bot name shown in Feishu; replace these values with your own before use.
+- Use `setup` as the primary user flow instead of manually chaining `install`, `init-config`, and `merge-config`.
+- `init-config` discovers bots/accounts from your current config, then lets you fill in the visible Feishu bot names.
 - Delegation policy should stay in agent prompts, not in transport code.
 - The current template format is plain JSON, not JSON5.

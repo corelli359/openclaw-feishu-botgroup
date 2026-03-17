@@ -1,21 +1,13 @@
 {
-  // `id` is the stable internal agent ID.
-  // `name` is the visible bot name shown in Feishu group mentions.
   "agents": {
-    "list": [
-      { "id": "agent-a", "name": "机器人甲" },
-      { "id": "agent-b", "name": "机器人乙" },
-      { "id": "agent-c", "name": "机器人丙" }
-    ]
+    // Use `openclaw-botgroup init-config` to scaffold agent names from your real config.
+    "list": []
   },
 
   "channels": {
     "feishu": {
-      "accounts": {
-        "agent-a": { "name": "机器人甲" },
-        "agent-b": { "name": "机器人乙" },
-        "agent-c": { "name": "机器人丙" }
-      },
+      // Use `openclaw-botgroup init-config` to scaffold Feishu account names from your real config.
+      "accounts": {},
 
       "agentHandoff": {
         "maxRounds": 3,

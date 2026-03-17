@@ -1,33 +1,6 @@
 {
-  "agents": {
-    "list": [
-      {
-        "id": "agent-a",
-        "name": "机器人甲"
-      },
-      {
-        "id": "agent-b",
-        "name": "机器人乙"
-      },
-      {
-        "id": "agent-c",
-        "name": "机器人丙"
-      }
-    ]
-  },
   "channels": {
     "feishu": {
-      "accounts": {
-        "agent-a": {
-          "name": "机器人甲"
-        },
-        "agent-b": {
-          "name": "机器人乙"
-        },
-        "agent-c": {
-          "name": "机器人丙"
-        }
-      },
       "agentHandoff": {
         "maxRounds": 3,
         "autoReceipt": true,

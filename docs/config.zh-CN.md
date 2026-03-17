@@ -2,7 +2,7 @@
 
 [English](./config.md)
 
-`openclaw-feishu-botgroup` 会把一小段 `agentHandoff` 配置合并到 `channels.feishu.agentHandoff`。
+`openclaw-feishu-botgroup` 会把一小段 `agentHandoff` 配置合并到 `channels.feishu.agentHandoff`。推荐流程不是直接手改模板，而是先运行 `openclaw-botgroup setup` 或 `openclaw-botgroup init-config`，从当前配置里发现已有 bot/账号后再生成本地配置。
 
 ## 作用
 
@@ -13,7 +13,7 @@
 - 自动完成通知
 - synthetic task 的提示模板
 
-合并脚本还会顺手补齐 bot 的可见名称，方便在群里直接使用别名 `@bot`。仓库里附带的 `机器人甲`、`agent-a` 之类名称只是占位符，其中 `name` 表示飞书里展示出来的 bot 名称，需要替换成你自己的实际值。
+如果你使用 `init-config` 生成的本地配置，合并时还会补齐 bot 的可见名称，方便在群里直接使用别名 `@bot`。这里的 `name` 表示飞书里展示出来的 bot 名称。
 
 ## 字段
 
@@ -32,3 +32,10 @@
 - `channels.feishu.accounts.<id>.name`
 
 这两类名称都会参与群聊里的 `@agent` 匹配。例如群里出现 `@机器人甲`，最终可以被解析回 `agent-a`。
+
+## 推荐旅程
+
+1. 先安装飞书官方 `openclaw-lark` 插件。
+2. 再运行 `openclaw-botgroup setup`。
+3. 初始化阶段会读取当前 `openclaw.json`，发现已有 bot/账号，并让你填写群内展示名。
+4. 工具会把本地 handoff 配置写到 `~/.openclaw/feishu-agent-handoff.config.json`，然后再合并回 `openclaw.json`。

@@ -28,37 +28,39 @@
 发布到 npm 后可直接执行：
 
 ```bash
-npx openclaw-feishu-botgroup install
-npx openclaw-feishu-botgroup merge-config
+npx openclaw-feishu-botgroup setup
 ```
 
 如果你在本地仓库中调试：
 
 ```bash
-node bin/openclaw-botgroup.js install
-node bin/openclaw-botgroup.js merge-config
+node bin/openclaw-botgroup.js setup
 ```
 
 ## 常用命令
 
 ```bash
+openclaw-botgroup setup
 openclaw-botgroup install
+openclaw-botgroup init-config
 openclaw-botgroup install --openclaw-home ~/.openclaw --no-restart
 openclaw-botgroup merge-config
 openclaw-botgroup print-config-template
 openclaw-botgroup print-agent-template
 ```
 
+- `setup`：推荐入口；按顺序完成 patch、发现当前 bot/账号、生成本地 handoff 配置并合并回 `openclaw.json`
 - `install`：先检查飞书官方插件是否已安装，再覆盖本地 `openclaw-lark` patch 文件
-- `merge-config`：把 botgroup 配置合并进 `openclaw.json`
-- `print-config-template`：打印 JSON 配置模板
+- `init-config`：从当前 `openclaw.json` 发现已有 bot/账号，并生成一份本地 handoff 配置草稿
+- `merge-config`：把本地 handoff 配置合并进 `openclaw.json`
+- `print-config-template`：打印安全的基础 `agentHandoff` JSON 模板
 - `print-agent-template`：打印 agent 协作提示词模板
 
 ## 推荐使用步骤
 
 1. 先按飞书官方说明安装 `openclaw-lark`。
-2. 再执行 patch 安装。
-3. 然后执行配置合并。
+2. 执行 `node bin/openclaw-botgroup.js setup`。
+3. 在初始化阶段确认或填写每个 bot 在飞书群里的展示名。
 4. 把 `templates/agent-collaboration.AGENTS.md` 中的规则放进各个 agent 的提示词。
 5. 重启 gateway。
 6. 在群里测试 `A -> B` 和 `A -> B -> C` 协作链路。
@@ -75,7 +77,8 @@ openclaw-botgroup print-agent-template
 
 - 这不是 OpenClaw 官方上游发布，而是一套 patch kit。
 - 必须先装飞书官方插件，再使用这套 patch kit。
-- 仓库里的 `id` 和 `name` 示例都是占位符，其中 `name` 表示飞书里展示出来的 bot 名称，发布到自己的环境前请替换成实际值。
+- 推荐直接使用 `setup` 作为用户入口，而不是手工拼接 `install`、`init-config`、`merge-config`。
+- `init-config` 会从你当前配置里发现已有 bot/账号，再让你补齐飞书群展示名。
 - 任务拆分、汇总和回传顺序，建议写在 agent 提示词里。
 - 代码层只负责收发、别名解析、状态通知和轮次控制。
 - 当前模板格式是标准 JSON，不是 JSON5。

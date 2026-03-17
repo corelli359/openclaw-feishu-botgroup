@@ -2,19 +2,30 @@
 
 const fs = require("fs");
 const path = require("path");
+const os = require("os");
 const { spawnSync } = require("child_process");
 
 const rootDir = path.resolve(__dirname, "..");
 const installScript = path.join(rootDir, "scripts", "install-feishu-agent-handoff.sh");
+const initScript = path.join(rootDir, "scripts", "init-feishu-agent-handoff-config.js");
 const mergeScript = path.join(rootDir, "scripts", "merge-feishu-agent-handoff-config.js");
 const configTemplate = path.join(rootDir, "templates", "feishu-agent-handoff.config.json");
 const agentTemplate = path.join(rootDir, "templates", "agent-collaboration.AGENTS.md");
+
+function expandHome(input) {
+  if (!input.startsWith("~")) {
+    return input;
+  }
+  return path.join(os.homedir(), input.slice(1));
+}
 
 function printHelp() {
   console.log(`openclaw-botgroup
 
 Usage:
+  openclaw-botgroup setup [--openclaw-home PATH] [--plugin-dir PATH] [--no-restart] [target-config] [output-config]
   openclaw-botgroup install [--openclaw-home PATH] [--plugin-dir PATH] [--no-restart]
+  openclaw-botgroup init-config [target-config] [output-config]
   openclaw-botgroup merge-config [target-config] [template-config]
   openclaw-botgroup print-config-template
   openclaw-botgroup print-agent-template
@@ -22,6 +33,8 @@ Usage:
 
 Notes:
   install requires an existing official Feishu openclaw-lark plugin install.
+  setup is the recommended guided flow after the official plugin is installed.
+  init-config discovers your current bots/accounts and scaffolds a local config.
 `);
 }
 
@@ -35,7 +48,78 @@ function run(command, args, options = {}) {
     throw result.error;
   }
 
-  process.exit(result.status || 0);
+  return result.status || 0;
+}
+
+function runOrExit(command, args, options = {}) {
+  process.exit(run(command, args, options));
+}
+
+function parseInstallOptions(args) {
+  const env = { ...process.env };
+  const passthrough = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const value = args[index];
+    if (value === "--openclaw-home") {
+      env.OPENCLAW_HOME = args[index + 1];
+      index += 1;
+      continue;
+    }
+    if (value === "--plugin-dir") {
+      env.PLUGIN_DIR = args[index + 1];
+      index += 1;
+      continue;
+    }
+    if (value === "--no-restart") {
+      env.RESTART_GATEWAY = "0";
+      continue;
+    }
+    passthrough.push(value);
+  }
+
+  return { env, passthrough };
+}
+
+function resolveSetupPaths(env, passthrough) {
+  const openclawHome = path.resolve(expandHome(env.OPENCLAW_HOME || "~/.openclaw"));
+  const targetConfig = path.resolve(expandHome(passthrough[0] || path.join(openclawHome, "openclaw.json")));
+  const outputConfig = path.resolve(
+    expandHome(passthrough[1] || path.join(openclawHome, "feishu-agent-handoff.config.json"))
+  );
+
+  return { targetConfig, outputConfig };
+}
+
+function runSetup(args) {
+  const { env, passthrough } = parseInstallOptions(args);
+  env.OPENCLAW_BOTGROUP_SETUP = "1";
+  const { targetConfig, outputConfig } = resolveSetupPaths(env, passthrough);
+
+  console.log("== Step 1/3: Patch local openclaw-lark plugin ==");
+  let status = run("bash", [installScript], { env });
+  if (status !== 0) {
+    process.exit(status);
+  }
+
+  console.log("");
+  console.log("== Step 2/3: Initialize local handoff config from current bots/accounts ==");
+  status = run(process.execPath, [initScript, targetConfig, outputConfig], { env });
+  if (status !== 0) {
+    process.exit(status);
+  }
+
+  console.log("");
+  console.log("== Step 3/3: Merge local handoff config into openclaw.json ==");
+  status = run(process.execPath, [mergeScript, targetConfig, outputConfig], { env });
+  if (status !== 0) {
+    process.exit(status);
+  }
+
+  console.log("");
+  console.log("Setup completed.");
+  console.log("Next step: add templates/agent-collaboration.AGENTS.md rules into each agent prompt file.");
+  console.log("Then test bot mentions and handoff flow in your Feishu group.");
 }
 
 function main() {
@@ -56,35 +140,24 @@ function main() {
     return;
   }
 
+  if (subcommand === "setup") {
+    runSetup(args);
+    return;
+  }
+
   if (subcommand === "merge-config") {
-    run(process.execPath, [mergeScript, ...args]);
+    runOrExit(process.execPath, [mergeScript, ...args]);
+    return;
+  }
+
+  if (subcommand === "init-config") {
+    runOrExit(process.execPath, [initScript, ...args]);
     return;
   }
 
   if (subcommand === "install") {
-    const env = { ...process.env };
-    const passthrough = [];
-
-    for (let index = 0; index < args.length; index += 1) {
-      const value = args[index];
-      if (value === "--openclaw-home") {
-        env.OPENCLAW_HOME = args[index + 1];
-        index += 1;
-        continue;
-      }
-      if (value === "--plugin-dir") {
-        env.PLUGIN_DIR = args[index + 1];
-        index += 1;
-        continue;
-      }
-      if (value === "--no-restart") {
-        env.RESTART_GATEWAY = "0";
-        continue;
-      }
-      passthrough.push(value);
-    }
-
-    run("bash", [installScript, ...passthrough], { env });
+    const { env, passthrough } = parseInstallOptions(args);
+    runOrExit("bash", [installScript, ...passthrough], { env });
     return;
   }
 
