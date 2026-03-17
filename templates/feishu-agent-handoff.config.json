@@ -3,15 +3,15 @@
     "list": [
       {
         "id": "agent-a",
-        "name": "Agent-A"
+        "name": "机器人甲"
       },
       {
         "id": "agent-b",
-        "name": "Agent-B"
+        "name": "机器人乙"
       },
       {
         "id": "agent-c",
-        "name": "Agent-C"
+        "name": "机器人丙"
       }
     ]
   },
@@ -19,13 +19,13 @@
     "feishu": {
       "accounts": {
         "agent-a": {
-          "name": "Agent-A"
+          "name": "机器人甲"
         },
         "agent-b": {
-          "name": "Agent-B"
+          "name": "机器人乙"
         },
         "agent-c": {
-          "name": "Agent-C"
+          "name": "机器人丙"
         }
       },
       "agentHandoff": {

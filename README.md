@@ -10,7 +10,7 @@
 - Synthetic handoff when one bot delegates work to another
 - Visible `received` and `completed` notices in group chat
 - Round limits to prevent callback loops
-- Alias support so visible names such as `@Agent-A` can map to `agent-a`
+- Alias support so visible names such as `@机器人甲` can map to `agent-a`
 
 ## Prerequisites
 
@@ -75,6 +75,6 @@ openclaw-botgroup print-agent-template
 
 - This is a patch kit, not an upstream OpenClaw release.
 - The official Feishu plugin must be installed before this patch kit is used.
-- Agent IDs and display names in the repository templates are placeholders; replace them with your own values before use.
+- Agent IDs and display names in the repository templates are placeholders. In particular, `name` means the bot name shown in Feishu; replace these values with your own before use.
 - Delegation policy should stay in agent prompts, not in transport code.
 - The current template format is plain JSON, not JSON5.

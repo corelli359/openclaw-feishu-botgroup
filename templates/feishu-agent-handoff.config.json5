@@ -1,19 +1,20 @@
 {
-  // Replace these placeholders with your own agent IDs and visible names.
+  // `id` is the stable internal agent ID.
+  // `name` is the visible bot name shown in Feishu group mentions.
   "agents": {
     "list": [
-      { "id": "agent-a", "name": "Agent-A" },
-      { "id": "agent-b", "name": "Agent-B" },
-      { "id": "agent-c", "name": "Agent-C" }
+      { "id": "agent-a", "name": "机器人甲" },
+      { "id": "agent-b", "name": "机器人乙" },
+      { "id": "agent-c", "name": "机器人丙" }
     ]
   },
 
   "channels": {
     "feishu": {
       "accounts": {
-        "agent-a": { "name": "Agent-A" },
-        "agent-b": { "name": "Agent-B" },
-        "agent-c": { "name": "Agent-C" }
+        "agent-a": { "name": "机器人甲" },
+        "agent-b": { "name": "机器人乙" },
+        "agent-c": { "name": "机器人丙" }
       },
 
       "agentHandoff": {
