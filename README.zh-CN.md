@@ -12,7 +12,18 @@
 - 支持轮次限制，避免 bot 之间互相回调失控
 - 支持别名映射，例如把 `@指挥家` 解析回 `zhihui`
 
+## 前置依赖
+
+使用本工具前，必须先按飞书官方文档安装 Feishu 官方插件 `openclaw-lark`：
+
+- 官方说明：https://www.feishu.cn/content/article/7613711414611463386
+- 官方安装命令：`npx -y @larksuite/openclaw-lark-tools install`
+
+本项目不是官方插件的替代品，而是在本地已安装的 `openclaw-lark` 基础上追加 patch 和配置。如果没有先完成官方安装，`install` 命令会因为找不到 `~/.openclaw/extensions/openclaw-lark` 而失败。
+
 ## 安装
+
+完成上面的官方插件安装后，再执行：
 
 发布到 npm 后可直接执行：
 
@@ -45,11 +56,12 @@ openclaw-botgroup print-agent-template
 
 ## 推荐使用步骤
 
-1. 先执行 patch 安装。
-2. 再执行配置合并。
-3. 把 `templates/agent-collaboration.AGENTS.md` 中的规则放进各个 agent 的提示词。
-4. 重启 gateway。
-5. 在群里测试 `A -> B` 和 `A -> B -> C` 协作链路。
+1. 先按飞书官方说明安装 `openclaw-lark`。
+2. 再执行 patch 安装。
+3. 然后执行配置合并。
+4. 把 `templates/agent-collaboration.AGENTS.md` 中的规则放进各个 agent 的提示词。
+5. 重启 gateway。
+6. 在群里测试 `A -> B` 和 `A -> B -> C` 协作链路。
 
 ## 目录结构
 
@@ -62,6 +74,7 @@ openclaw-botgroup print-agent-template
 ## 说明
 
 - 这不是 OpenClaw 官方上游发布，而是一套 patch kit。
+- 必须先装飞书官方插件，再使用这套 patch kit。
 - 任务拆分、汇总和回传顺序，建议写在 agent 提示词里。
 - 代码层只负责收发、别名解析、状态通知和轮次控制。
 - 当前模板格式是标准 JSON，不是 JSON5。

@@ -12,7 +12,18 @@
 - Round limits to prevent callback loops
 - Alias support so visible names such as `@Conductor` can map to `zhihui`
 
+## Prerequisites
+
+Before using this toolkit, you must first install the official Feishu `openclaw-lark` plugin by following the official Feishu guide:
+
+- Official guide: https://www.feishu.cn/content/article/7613711414611463386
+- Official install command: `npx -y @larksuite/openclaw-lark-tools install`
+
+This project does not replace the official plugin installation flow. It only adds patches and config on top of an existing local `openclaw-lark` install. If that step is skipped, the `install` command will fail because `~/.openclaw/extensions/openclaw-lark` does not exist.
+
 ## Install
+
+After the official plugin is installed, continue with:
 
 After publishing to npm:
 
@@ -45,11 +56,12 @@ openclaw-botgroup print-agent-template
 
 ## Recommended Setup
 
-1. Install the patch.
-2. Merge the config template.
-3. Copy `templates/agent-collaboration.AGENTS.md` into your agent prompt setup.
-4. Restart the gateway.
-5. Test `A -> B` and `A -> B -> C` group workflows.
+1. Install `openclaw-lark` using the official Feishu guide.
+2. Install the patch.
+3. Merge the config template.
+4. Copy `templates/agent-collaboration.AGENTS.md` into your agent prompt setup.
+5. Restart the gateway.
+6. Test `A -> B` and `A -> B -> C` group workflows.
 
 ## Repository Layout
 
@@ -62,5 +74,6 @@ openclaw-botgroup print-agent-template
 ## Notes
 
 - This is a patch kit, not an upstream OpenClaw release.
+- The official Feishu plugin must be installed before this patch kit is used.
 - Delegation policy should stay in agent prompts, not in transport code.
 - The current template format is plain JSON, not JSON5.
