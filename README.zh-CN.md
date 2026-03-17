@@ -10,7 +10,7 @@
 - 支持 bot A 把任务转交给 bot B
 - 支持在群里可见地回执“已收到”“已完成”
 - 支持轮次限制，避免 bot 之间互相回调失控
-- 支持别名映射，例如把 `@指挥家` 解析回 `zhihui`
+- 支持别名映射，例如把 `@Agent-A` 解析回 `agent-a`
 
 ## 前置依赖
 
@@ -19,7 +19,7 @@
 - 官方说明：https://www.feishu.cn/content/article/7613711414611463386
 - 官方安装命令：`npx -y @larksuite/openclaw-lark-tools install`
 
-本项目不是官方插件的替代品，而是在本地已安装的 `openclaw-lark` 基础上追加 patch 和配置。如果没有先完成官方安装，`install` 命令会因为找不到 `~/.openclaw/extensions/openclaw-lark` 而失败。
+本项目不是官方插件的替代品，而是在本地已安装的 `openclaw-lark` 基础上追加 patch 和配置。如果没有先完成官方安装，`install` 命令会在预检阶段直接报错，并提示你先执行官方安装命令。
 
 ## 安装
 
@@ -49,7 +49,7 @@ openclaw-botgroup print-config-template
 openclaw-botgroup print-agent-template
 ```
 
-- `install`：覆盖本地 `openclaw-lark` patch 文件
+- `install`：先检查飞书官方插件是否已安装，再覆盖本地 `openclaw-lark` patch 文件
 - `merge-config`：把 botgroup 配置合并进 `openclaw.json`
 - `print-config-template`：打印 JSON 配置模板
 - `print-agent-template`：打印 agent 协作提示词模板
@@ -75,6 +75,7 @@ openclaw-botgroup print-agent-template
 
 - 这不是 OpenClaw 官方上游发布，而是一套 patch kit。
 - 必须先装飞书官方插件，再使用这套 patch kit。
+- 仓库里的 agent 名称和显示名示例都是占位符，发布到自己的环境前请替换成实际值。
 - 任务拆分、汇总和回传顺序，建议写在 agent 提示词里。
 - 代码层只负责收发、别名解析、状态通知和轮次控制。
 - 当前模板格式是标准 JSON，不是 JSON5。

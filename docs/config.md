@@ -13,7 +13,7 @@ This block provides infrastructure for group collaboration. It does not define b
 - automatic completion notices
 - synthetic task prompt templates
 
-The merge step also fills visible bot names so group mentions can match aliases.
+The merge step also fills visible bot names so group mentions can match aliases. The repository templates use placeholder values such as `Agent-A` and `agent-a`; replace them with your own names before use.
 
 ## Keys
 

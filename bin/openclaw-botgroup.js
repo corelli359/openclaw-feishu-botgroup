@@ -19,6 +19,9 @@ Usage:
   openclaw-botgroup print-config-template
   openclaw-botgroup print-agent-template
   openclaw-botgroup help
+
+Notes:
+  install requires an existing official Feishu openclaw-lark plugin install.
 `);
 }
 

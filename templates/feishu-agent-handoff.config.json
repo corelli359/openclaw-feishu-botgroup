@@ -2,30 +2,30 @@
   "agents": {
     "list": [
       {
-        "id": "zhihui",
-        "name": "指挥家"
+        "id": "agent-a",
+        "name": "Agent-A"
       },
       {
-        "id": "nangaoyin",
-        "name": "男高音"
+        "id": "agent-b",
+        "name": "Agent-B"
       },
       {
-        "id": "benben",
-        "name": "笨笨"
+        "id": "agent-c",
+        "name": "Agent-C"
       }
     ]
   },
   "channels": {
     "feishu": {
       "accounts": {
-        "zhihui": {
-          "name": "指挥家"
+        "agent-a": {
+          "name": "Agent-A"
         },
-        "nangaoyin": {
-          "name": "男高音"
+        "agent-b": {
+          "name": "Agent-B"
         },
-        "benben": {
-          "name": "笨笨"
+        "agent-c": {
+          "name": "Agent-C"
         }
       },
       "agentHandoff": {

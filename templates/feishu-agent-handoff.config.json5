@@ -1,19 +1,19 @@
 {
-  // Give every agent and Feishu account a stable visible name.
+  // Replace these placeholders with your own agent IDs and visible names.
   "agents": {
     "list": [
-      { "id": "zhihui", "name": "指挥家" },
-      { "id": "nangaoyin", "name": "男高音" },
-      { "id": "benben", "name": "笨笨" }
+      { "id": "agent-a", "name": "Agent-A" },
+      { "id": "agent-b", "name": "Agent-B" },
+      { "id": "agent-c", "name": "Agent-C" }
     ]
   },
 
   "channels": {
     "feishu": {
       "accounts": {
-        "zhihui": { "name": "指挥家" },
-        "nangaoyin": { "name": "男高音" },
-        "benben": { "name": "笨笨" }
+        "agent-a": { "name": "Agent-A" },
+        "agent-b": { "name": "Agent-B" },
+        "agent-c": { "name": "Agent-C" }
       },
 
       "agentHandoff": {

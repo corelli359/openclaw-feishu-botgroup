@@ -10,26 +10,59 @@ PLUGIN_DIR="${PLUGIN_DIR:-$OPENCLAW_HOME/extensions/openclaw-lark}"
 PATCH_ROOT="${PATCH_ROOT:-$REPO_ROOT/remote_patch/openclaw-lark}"
 BACKUP_DIR="${BACKUP_DIR:-$OPENCLAW_HOME/backups/openclaw-lark-oneclick-$(date +%Y%m%d-%H%M%S)}"
 RESTART_GATEWAY="${RESTART_GATEWAY:-1}"
+OFFICIAL_PLUGIN_GUIDE="https://www.feishu.cn/content/article/7613711414611463386"
+OFFICIAL_PLUGIN_INSTALL_CMD="npx -y @larksuite/openclaw-lark-tools install"
 
-FILES=(
+PATCH_FILES=(
   "src/messaging/inbound/dispatch.js"
   "src/messaging/shared/agent-mentions.js"
   "src/card/reply-dispatcher.js"
 )
 
-if [[ ! -d "$PLUGIN_DIR" ]]; then
-  echo "Plugin directory not found: $PLUGIN_DIR" >&2
-  exit 1
-fi
+print_official_plugin_help() {
+  echo "Install the official Feishu plugin first:" >&2
+  echo "  $OFFICIAL_PLUGIN_INSTALL_CMD" >&2
+  echo "Guide:" >&2
+  echo "  $OFFICIAL_PLUGIN_GUIDE" >&2
+}
+
+verify_official_plugin() {
+  local rel
+  local missing=()
+
+  if [[ ! -d "$PLUGIN_DIR" ]]; then
+    echo "Official Feishu plugin not detected: $PLUGIN_DIR" >&2
+    print_official_plugin_help
+    exit 1
+  fi
+
+  for rel in "${PATCH_FILES[@]}"; do
+    if [[ ! -f "$PLUGIN_DIR/$rel" ]]; then
+      missing+=("$rel")
+    fi
+  done
+
+  if (( ${#missing[@]} > 0 )); then
+    echo "Official Feishu plugin installation looks incomplete or incompatible: $PLUGIN_DIR" >&2
+    echo "Missing required plugin files:" >&2
+    for rel in "${missing[@]}"; do
+      echo "  - $rel" >&2
+    done
+    print_official_plugin_help
+    exit 1
+  fi
+}
 
 if [[ ! -d "$PATCH_ROOT" ]]; then
   echo "Patch root not found: $PATCH_ROOT" >&2
   exit 1
 fi
 
+verify_official_plugin
+
 mkdir -p "$BACKUP_DIR"
 
-for rel in "${FILES[@]}"; do
+for rel in "${PATCH_FILES[@]}"; do
   src="$PATCH_ROOT/$rel"
   dst="$PLUGIN_DIR/$rel"
 

@@ -10,7 +10,7 @@
 - Synthetic handoff when one bot delegates work to another
 - Visible `received` and `completed` notices in group chat
 - Round limits to prevent callback loops
-- Alias support so visible names such as `@Conductor` can map to `zhihui`
+- Alias support so visible names such as `@Agent-A` can map to `agent-a`
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ Before using this toolkit, you must first install the official Feishu `openclaw-
 - Official guide: https://www.feishu.cn/content/article/7613711414611463386
 - Official install command: `npx -y @larksuite/openclaw-lark-tools install`
 
-This project does not replace the official plugin installation flow. It only adds patches and config on top of an existing local `openclaw-lark` install. If that step is skipped, the `install` command will fail because `~/.openclaw/extensions/openclaw-lark` does not exist.
+This project does not replace the official plugin installation flow. It only adds patches and config on top of an existing local `openclaw-lark` install. If that step is skipped, the `install` command stops during preflight and tells you to run the official install command first.
 
 ## Install
 
@@ -49,7 +49,7 @@ openclaw-botgroup print-config-template
 openclaw-botgroup print-agent-template
 ```
 
-- `install`: copies the patched `openclaw-lark` files
+- `install`: verifies the official Feishu plugin is installed, then copies the patched `openclaw-lark` files
 - `merge-config`: merges the handoff config into `openclaw.json`
 - `print-config-template`: prints the JSON config template
 - `print-agent-template`: prints the agent prompt template
@@ -75,5 +75,6 @@ openclaw-botgroup print-agent-template
 
 - This is a patch kit, not an upstream OpenClaw release.
 - The official Feishu plugin must be installed before this patch kit is used.
+- Agent IDs and display names in the repository templates are placeholders; replace them with your own values before use.
 - Delegation policy should stay in agent prompts, not in transport code.
 - The current template format is plain JSON, not JSON5.

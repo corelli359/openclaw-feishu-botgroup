@@ -13,7 +13,7 @@
 - 自动完成通知
 - synthetic task 的提示模板
 
-合并脚本还会顺手补齐 bot 的可见名称，方便在群里直接使用别名 `@bot`。
+合并脚本还会顺手补齐 bot 的可见名称，方便在群里直接使用别名 `@bot`。仓库里附带的 `Agent-A`、`agent-a` 之类名称只是占位符，需要替换成你自己的实际值。
 
 ## 字段
 
@@ -31,4 +31,4 @@
 - `agents.list[].name`
 - `channels.feishu.accounts.<id>.name`
 
-这两类名称都会参与群聊里的 `@agent` 匹配。例如群里出现 `@指挥家`，最终可以被解析回 `zhihui`。
+这两类名称都会参与群聊里的 `@agent` 匹配。例如群里出现 `@Agent-A`，最终可以被解析回 `agent-a`。
