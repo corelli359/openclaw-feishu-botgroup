@@ -41,6 +41,11 @@ const DEFAULT_AGENT_HANDOFF_TASK_TEMPLATE = [
     '[System: 协作顺序、回执策略、汇总方式以当前 agent 的提示词/AGENTS 规则为准；基础收发能力与轮次控制由系统负责。]',
     '{taskBody}',
 ].join('\n\n');
+const DEFAULT_AGENT_HANDOFF_RETURN_TEMPLATE = [
+    '[System: 这是来自 {sourceDisplayName} 的下游协作结果回传。]',
+    '[System: 当前协作轮次 {handoffRound}/{maxRounds}。请先汇总下游结果，再决定是否继续向用户回复或转交其他 agent。]',
+    '{taskBody}',
+].join('\n\n');
 const DEFAULT_AGENT_HANDOFF_RECEIPT_TEMPLATE = '任务已收到，第 {handoffRound} 轮协作开始处理。';
 const DEFAULT_AGENT_HANDOFF_COMPLETE_TEMPLATE = '任务已完成，第 {handoffRound} 轮协作已处理完毕，相关结果已发在群里。';
 function renderAgentHandoffTemplate(template, variables) {
@@ -48,6 +53,29 @@ function renderAgentHandoffTemplate(template, variables) {
         const value = variables[key];
         return value == null ? '' : String(value);
     }).trim();
+}
+function normalizeAgentReturnEntry(entry) {
+    if (!entry || typeof entry.agentId !== 'string' || typeof entry.accountId !== 'string' || typeof entry.displayName !== 'string') {
+        return null;
+    }
+    return {
+        agentId: entry.agentId,
+        accountId: entry.accountId,
+        displayName: entry.displayName,
+        botOpenId: typeof entry.botOpenId === 'string' && entry.botOpenId ? entry.botOpenId : undefined,
+    };
+}
+function getSyntheticReturnChain(syntheticMeta) {
+    if (Array.isArray(syntheticMeta?.returnChain)) {
+        return syntheticMeta.returnChain
+            .map((entry) => normalizeAgentReturnEntry(entry))
+            .filter((entry) => entry);
+    }
+    const notifySource = normalizeAgentReturnEntry(syntheticMeta?.notifySource);
+    return notifySource ? [notifySource] : [];
+}
+function getImmediateNotifySource(syntheticMeta) {
+    return getSyntheticReturnChain(syntheticMeta)[0];
 }
 function resolveAgentHandoffSettings(cfg) {
     const handoffCfg = cfg?.channels?.feishu?.agentHandoff ?? {};
@@ -80,9 +108,20 @@ function buildAgentHandoffTaskText(params) {
         taskBody,
     });
 }
+function buildAgentReturnTaskText(params) {
+    const { sourceDisplayName, cleanedTaskText, handoffRound, maxRounds, sourceAgentId } = params;
+    const taskBody = cleanedTaskText || '下游 agent 已完成当前任务，但没有输出可回传的正文。';
+    return renderAgentHandoffTemplate(DEFAULT_AGENT_HANDOFF_RETURN_TEMPLATE, {
+        sourceDisplayName,
+        sourceAgentId,
+        handoffRound,
+        maxRounds,
+        taskBody,
+    });
+}
 async function sendAgentHandoffStatusMessage(params) {
     const { dc, replyToMessageId, phase, syntheticMeta, handoffSettings } = params;
-    const notifySource = syntheticMeta?.notifySource;
+    const notifySource = getImmediateNotifySource(syntheticMeta);
     if (!notifySource) {
         return;
     }
@@ -147,10 +186,22 @@ async function dispatchAgentMentionHandoffs(params) {
     const sourceDisplayName = sourceEntry?.displayName ??
         dc.account.name ??
         dc.route.agentId;
+    const currentSource = normalizeAgentReturnEntry(sourceEntry) ?? {
+        agentId: dc.route.agentId,
+        accountId: dc.account.accountId,
+        displayName: sourceDisplayName,
+        botOpenId: undefined,
+    };
     const handoffPath = Array.isArray(syntheticMeta?.handoffPath) ? syntheticMeta.handoffPath : [];
+    const upstreamReturnChain = getSyntheticReturnChain(syntheticMeta);
+    const nextReturnChain = [currentSource, ...upstreamReturnChain];
     const nextPath = [...handoffPath, dc.route.agentId];
+    const returnedFromAgentId = typeof syntheticMeta?.returnedFromAgentId === 'string'
+        ? syntheticMeta.returnedFromAgentId
+        : undefined;
     for (const target of mentionResolution.targets) {
-        if (target.agentId === dc.route.agentId || handoffPath.includes(target.agentId)) {
+        if (target.agentId === dc.route.agentId ||
+            (handoffPath.includes(target.agentId) && target.agentId !== returnedFromAgentId)) {
             continue;
         }
         const targetAccount = getLarkAccount(globalCfg, target.accountId);
@@ -229,14 +280,8 @@ async function dispatchAgentMentionHandoffs(params) {
                     syntheticMeta: {
                         handoffDepth: handoffRound,
                         handoffPath: nextPath,
-                        notifySource: sourceEntry
-                            ? {
-                                agentId: sourceEntry.agentId,
-                                accountId: sourceEntry.accountId,
-                                displayName: sourceEntry.displayName,
-                                botOpenId: sourceEntry.botOpenId,
-                            }
-                            : undefined,
+                        notifySource: currentSource,
+                        returnChain: nextReturnChain,
                     },
                 });
             },
@@ -244,6 +289,106 @@ async function dispatchAgentMentionHandoffs(params) {
         dc.log(`feishu[${dc.account.accountId}]: queued agent handoff ${dc.route.agentId} -> ${target.agentId} (round ${handoffRound}/${handoffSettings.maxRounds}, ${status})`);
         await promise;
     }
+}
+async function dispatchAgentResultReturn(params) {
+    const { dc, chatHistories, completedReplyText, completedHandoffText, historyLimit, replyToMessageId, syntheticMeta } = params;
+    const returnChain = getSyntheticReturnChain(syntheticMeta);
+    const notifySource = returnChain[0];
+    if (!dc.isGroup || !notifySource) {
+        return;
+    }
+    const remainingReturnChain = returnChain.slice(1);
+    const globalCfg = LarkClient.globalConfig ?? dc.accountScopedCfg;
+    const sourceAccount = getLarkAccount(globalCfg, notifySource.accountId);
+    if (!sourceAccount.enabled || !sourceAccount.configured) {
+        dc.log(`feishu[${dc.account.accountId}]: source ${notifySource.agentId} is not configured, skipping result return`);
+        return;
+    }
+    const handoffSettings = resolveAgentHandoffSettings(dc.accountScopedCfg);
+    const handoffRound = Math.max(1, syntheticMeta?.handoffDepth ?? 1);
+    const sourceAccountScopedCfg = {
+        ...globalCfg,
+        channels: { ...globalCfg.channels, feishu: sourceAccount.config },
+    };
+    const sourceHistoryLimit = Math.max(0, sourceAccount.config?.historyLimit ?? sourceAccountScopedCfg.messages?.groupChat?.historyLimit ?? historyLimit);
+    const sourceGroupConfig = resolveFeishuGroupConfig({ cfg: sourceAccount.config, groupId: dc.ctx.chatId });
+    const sourceDefaultGroupConfig = sourceAccount.config?.groups?.['*'];
+    const currentDisplayName = dc.account.name ?? dc.route.agentId;
+    const returnText = buildAgentReturnTaskText({
+        sourceDisplayName: currentDisplayName,
+        cleanedTaskText: completedHandoffText?.trim() || completedReplyText?.trim(),
+        handoffRound,
+        maxRounds: handoffSettings.maxRounds,
+        sourceAgentId: dc.route.agentId,
+    });
+    const handoffPath = Array.isArray(syntheticMeta?.handoffPath) ? syntheticMeta.handoffPath : [];
+    const nextPath = handoffPath.includes(dc.route.agentId)
+        ? handoffPath
+        : [...handoffPath, dc.route.agentId];
+    const syntheticMessageId = `${replyToMessageId ?? dc.ctx.messageId}:agent-return:${dc.route.agentId}:${notifySource.agentId}:${Date.now()}`;
+    const syntheticCtx = {
+        chatId: dc.ctx.chatId,
+        messageId: syntheticMessageId,
+        senderId: `agent:${dc.route.agentId}`,
+        senderName: currentDisplayName,
+        chatType: dc.ctx.chatType,
+        content: returnText,
+        contentType: 'text',
+        resources: [],
+        mentions: [],
+        threadId: dc.ctx.threadId,
+        rawMessage: {
+            message_id: syntheticMessageId,
+            chat_id: dc.ctx.chatId,
+            chat_type: dc.ctx.chatType,
+            message_type: 'text',
+            content: JSON.stringify({ text: returnText }),
+            thread_id: dc.ctx.threadId,
+            create_time: String(Date.now()),
+        },
+        rawSender: {
+            sender_id: { open_id: `agent:${dc.route.agentId}` },
+            sender_type: 'app',
+        },
+    };
+    const syntheticRuntime = {
+        log: (message) => dc.log(message),
+        error: (message) => dc.error(message),
+    };
+    const { status, promise } = enqueueFeishuChatTask({
+        accountId: notifySource.accountId,
+        chatId: dc.ctx.chatId,
+        threadId: dc.ctx.threadId,
+        task: async () => {
+            await dispatchToAgent({
+                ctx: syntheticCtx,
+                permissionError: undefined,
+                mediaPayload: {},
+                quotedContent: undefined,
+                account: sourceAccount,
+                accountScopedCfg: sourceAccountScopedCfg,
+                runtime: syntheticRuntime,
+                chatHistories,
+                historyLimit: sourceHistoryLimit,
+                replyToMessageId: replyToMessageId ?? dc.ctx.messageId,
+                commandAuthorized: false,
+                groupConfig: sourceGroupConfig,
+                defaultGroupConfig: sourceDefaultGroupConfig,
+                skipTyping: true,
+                syntheticMeta: {
+                    handoffDepth: handoffRound,
+                    handoffPath: nextPath,
+                    returnedFromAgentId: dc.route.agentId,
+                    notifySource: remainingReturnChain[0],
+                    returnChain: remainingReturnChain,
+                },
+            });
+        },
+    });
+    dc.log(`feishu[${dc.account.accountId}]: queued agent result return ${dc.route.agentId} -> ${notifySource.agentId} (round ${handoffRound}/${handoffSettings.maxRounds}, ${status})`);
+    void promise.catch((err) => {
+        dc.error(`feishu[${dc.account.accountId}]: failed queued result return ${dc.route.agentId} -> ${notifySource.agentId}: ${String(err)}`);
+    });
 }
 // ---------------------------------------------------------------------------
 // Internal: normal message dispatch
@@ -288,7 +433,7 @@ async function dispatchNormalMessage(dc, ctxPayload, chatHistories, historyKey, 
     log.info(`dispatching to agent (session=${effectiveSessionKey})`);
     try {
         const handoffSettings = resolveAgentHandoffSettings(dc.accountScopedCfg);
-        if (syntheticMeta?.notifySource && handoffSettings.autoReceipt) {
+        if (getImmediateNotifySource(syntheticMeta) && handoffSettings.autoReceipt) {
             await sendAgentHandoffStatusMessage({
                 dc,
                 replyToMessageId,
@@ -336,7 +481,16 @@ async function dispatchNormalMessage(dc, ctxPayload, chatHistories, historyKey, 
             replyToMessageId,
             syntheticMeta,
         });
-        if (syntheticMeta?.notifySource && handoffSettings.autoComplete) {
+        await dispatchAgentResultReturn({
+            dc,
+            chatHistories,
+            completedReplyText: getCompletedReplyText?.() ?? '',
+            completedHandoffText: getCompletedHandoffText?.() ?? '',
+            historyLimit,
+            replyToMessageId,
+            syntheticMeta,
+        });
+        if (getImmediateNotifySource(syntheticMeta) && handoffSettings.autoComplete) {
             await sendAgentHandoffStatusMessage({
                 dc,
                 replyToMessageId,

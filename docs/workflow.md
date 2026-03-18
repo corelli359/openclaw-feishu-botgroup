@@ -6,6 +6,7 @@ The goal is to keep orchestration policy out of transport code. The code layer s
 
 - resolve `@bot` into the target agent
 - dispatch synthetic handoff events
+- return downstream results to the upstream agent
 - emit visible status notices
 - enforce round limits
 
@@ -18,7 +19,9 @@ Delegation order, task splitting, and summarization rules should stay in agent p
 3. A synthetic handoff is dispatched to B.
 4. B sends a visible `received` notice to A.
 5. B handles the task and replies in the group.
-6. B sends a visible `completed` notice to A.
+6. The system sends B's result back to A as a synthetic return task.
+7. A receives the downstream result, summarizes it, and continues the user-facing reply.
+8. B sends a visible `completed` notice to A.
 
 ## A -> B -> C
 

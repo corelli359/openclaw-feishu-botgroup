@@ -8,6 +8,7 @@
 
 - Bot-to-bot `@agent` routing inside the same Feishu group
 - Synthetic handoff when one bot delegates work to another
+- Automatic downstream result return back to the upstream bot
 - Visible `received` and `completed` notices in group chat
 - Round limits to prevent callback loops
 - Alias support so visible names such as `@机器人甲` can map to `agent-a`

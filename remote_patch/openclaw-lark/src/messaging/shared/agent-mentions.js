@@ -84,6 +84,15 @@ function collectTarget(entry, seenTargets) {
         seenTargets.set(entry.agentId, entry);
     }
 }
+function collectUniqueEntry(map, rawKey, entry) {
+    const key = normalizeAliasKey(rawKey);
+    if (!key) {
+        return;
+    }
+    const list = map.get(key) ?? [];
+    list.push(entry);
+    map.set(key, list);
+}
 export async function getAgentMentionDirectory(cfg) {
     const globalCfg = LarkClient.globalConfig ?? cfg;
     const now = Date.now();
@@ -154,13 +163,20 @@ export function extractAgentMentions(params) {
         .sort((left, right) => right.name.length - left.name.length);
     const seenTargets = new Map();
     let cleanedText = rawText;
-    const openIdToEntry = new Map();
+    const mentionIdToEntries = new Map();
     for (const entry of directory) {
-        if (entry.agentId === currentAgentId || entry.accountId === currentAccountId || !entry.botOpenId) {
+        if (entry.agentId === currentAgentId || entry.accountId === currentAccountId) {
             continue;
         }
-        openIdToEntry.set(entry.botOpenId, entry);
+        collectUniqueEntry(mentionIdToEntries, entry.agentId, entry);
+        collectUniqueEntry(mentionIdToEntries, entry.accountId, entry);
+        if (entry.botOpenId) {
+            collectUniqueEntry(mentionIdToEntries, entry.botOpenId, entry);
+        }
     }
+    const uniqueMentionIdToEntry = new Map([...mentionIdToEntries.entries()]
+        .filter(([, matches]) => matches.length === 1)
+        .map(([key, matches]) => [key, matches[0]]));
     for (const candidate of candidates) {
         const pattern = new RegExp(`@${escapeRegExp(candidate.name)}${MENTION_END_BOUNDARY}`, 'giu');
         cleanedText = cleanedText.replace(pattern, () => {
@@ -169,7 +185,7 @@ export function extractAgentMentions(params) {
         });
     }
     cleanedText = cleanedText.replace(/<at\s+(?:id|open_id|user_id)\s*=\s*"?([^">\s]+)"?[^>]*>(.*?)<\/at>/giu, (fullMatch, targetId, label) => {
-        const entry = openIdToEntry.get(String(targetId)) ??
+        const entry = uniqueMentionIdToEntry.get(normalizeAliasKey(String(targetId))) ??
             uniqueAliasToEntry.get(normalizeAliasKey(String(label).replace(/<[^>]*>/g, '')));
         if (!entry) {
             return fullMatch;
