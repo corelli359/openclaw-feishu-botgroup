@@ -13,6 +13,16 @@
 - Round limits to prevent callback loops
 - Alias support so visible names such as `@机器人甲` can map to `agent-a`
 
+## Screenshots
+
+Sequential delegation in one Feishu group:
+
+![Sequential Feishu bot handoff](./assets/1.png)
+
+Final summary returned to the original requester after both subtasks finish:
+
+![Feishu bot final summary](./assets/2.png)
+
 ## Prerequisites
 
 Before using this toolkit, you must first install the official Feishu `openclaw-lark` plugin by following the official Feishu guide:
