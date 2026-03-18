@@ -5,9 +5,10 @@
         "maxRounds": 3,
         "autoReceipt": true,
         "autoComplete": true,
-        "taskTemplate": "[System: 这是来自 {sourceDisplayName} 的 agent 协作任务。]\n\n[System: 当前协作轮次 {handoffRound}/{maxRounds}。若需要继续转交其他 agent，不得超过最大轮次。]\n\n[System: 协作顺序、回执策略、汇总方式以当前 agent 的提示词/AGENTS 规则为准；基础收发能力与轮次控制由系统负责。]\n\n{taskBody}",
-        "receiptTemplate": "任务已收到，第 {handoffRound} 轮协作开始处理。",
-        "completeTemplate": "任务已完成，第 {handoffRound} 轮协作已处理完毕，相关结果已发在群里。"
+        "taskTemplate": "[System: 这是来自 {sourceDisplayName} 的 agent 协作任务。]\n\n[System: 当前系统协作深度 {handoffRound}/{maxRounds}。这只是系统限制，不是任务编号；若需要继续转交其他 agent，不得超过最大深度。]\n\n[System: 协作顺序、回执策略、汇总方式以当前 agent 的提示词/AGENTS 规则为准；基础收发能力与深度控制由系统负责。]\n\n{taskBody}",
+        "receiptTemplate": "协作任务已收到，开始处理。",
+        "completeTemplate": "协作任务已处理完成，相关结果已发在群里。",
+        "failureTemplate": "协作任务处理失败，错误信息已回传。"
       }
     }
   }

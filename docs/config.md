@@ -11,6 +11,7 @@ This block provides infrastructure for group collaboration. It does not define b
 - maximum handoff depth
 - automatic receipt notices
 - automatic completion notices
+- automatic failure notices
 - synthetic task prompt templates
 
 If you merge a local config produced by `init-config`, the merge step also fills visible bot names so group mentions can match aliases. Here, `name` means the bot name shown in Feishu.
@@ -18,11 +19,13 @@ If you merge a local config produced by `init-config`, the merge step also fills
 ## Keys
 
 - `maxRounds`: maximum synthetic handoff depth
+- `maxRounds` is a system depth limit, not a task counter
 - `autoReceipt`: whether the delegated bot notifies the source bot when work is received
 - `autoComplete`: whether the delegated bot notifies the source bot when the delegated chain completes
 - `taskTemplate`: system prompt injected into delegated tasks
 - `receiptTemplate`: visible group message template for accepted status
 - `completeTemplate`: visible group message template for completed status
+- `failureTemplate`: visible group message template for failed status
 
 ## Alias Mapping
 

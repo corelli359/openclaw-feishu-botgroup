@@ -37,17 +37,30 @@ const log = larkLogger('inbound/dispatch');
 const DEFAULT_AGENT_HANDOFF_MAX_ROUNDS = 3;
 const DEFAULT_AGENT_HANDOFF_TASK_TEMPLATE = [
     '[System: 这是来自 {sourceDisplayName} 的 agent 协作任务。]',
-    '[System: 当前协作轮次 {handoffRound}/{maxRounds}。若需要继续转交其他 agent，不得超过最大轮次。]',
-    '[System: 协作顺序、回执策略、汇总方式以当前 agent 的提示词/AGENTS 规则为准；基础收发能力与轮次控制由系统负责。]',
+    '[System: 当前系统协作深度 {handoffRound}/{maxRounds}。这只是系统限制，不是任务编号；若需要继续转交其他 agent，不得超过最大深度。]',
+    '[System: 协作顺序、回执策略、汇总方式以当前 agent 的提示词/AGENTS 规则为准；基础收发能力与深度控制由系统负责。]',
     '{taskBody}',
 ].join('\n\n');
 const DEFAULT_AGENT_HANDOFF_RETURN_TEMPLATE = [
     '[System: 这是来自 {sourceDisplayName} 的下游协作结果回传。]',
-    '[System: 当前协作轮次 {handoffRound}/{maxRounds}。请先汇总下游结果，再决定是否继续向用户回复或转交其他 agent。]',
+    '[System: 当前系统协作深度 {handoffRound}/{maxRounds}。这只是系统限制，不是任务编号。请先汇总下游结果，再决定是否继续向用户回复或转交其他 agent。]',
     '{taskBody}',
 ].join('\n\n');
-const DEFAULT_AGENT_HANDOFF_RECEIPT_TEMPLATE = '任务已收到，第 {handoffRound} 轮协作开始处理。';
-const DEFAULT_AGENT_HANDOFF_COMPLETE_TEMPLATE = '任务已完成，第 {handoffRound} 轮协作已处理完毕，相关结果已发在群里。';
+const DEFAULT_AGENT_HANDOFF_FAILURE_RETURN_TEMPLATE = [
+    '[System: 这是来自 {sourceDisplayName} 的下游协作失败回传。]',
+    '[System: 当前系统协作深度 {handoffRound}/{maxRounds}。这只是系统限制，不是任务编号。]',
+    '[System: 下游执行失败，这不代表任务完成。请先向上游或用户报告失败原因；除非用户明确要求，否则不要自动重试，也不要继续派发下一个子任务。]',
+    '{taskBody}',
+].join('\n\n');
+const DEFAULT_AGENT_HANDOFF_RECEIPT_TEMPLATE = '协作任务已收到，开始处理。';
+const DEFAULT_AGENT_HANDOFF_COMPLETE_TEMPLATE = '协作任务已处理完成，相关结果已发在群里。';
+const DEFAULT_AGENT_HANDOFF_FAILED_TEMPLATE = '协作任务处理失败，错误信息已回传。';
+const KNOWN_AGENT_FAILURE_PATTERNS = [
+    /An error occurred while processing your request\./iu,
+    /help\.openai\.com/iu,
+    /Please include the request ID/iu,
+    /API rate limit reached/iu,
+];
 function renderAgentHandoffTemplate(template, variables) {
     return String(template).replace(/\{(\w+)\}/g, (_match, key) => {
         const value = variables[key];
@@ -77,6 +90,22 @@ function getSyntheticReturnChain(syntheticMeta) {
 function getImmediateNotifySource(syntheticMeta) {
     return getSyntheticReturnChain(syntheticMeta)[0];
 }
+function resolveAgentOutcome(params) {
+    const completedReplyText = typeof params?.completedReplyText === 'string'
+        ? params.completedReplyText.trim()
+        : '';
+    const completedHandoffText = typeof params?.completedHandoffText === 'string'
+        ? params.completedHandoffText.trim()
+        : '';
+    const cleanedTaskText = completedHandoffText || completedReplyText;
+    const resultText = completedReplyText || cleanedTaskText;
+    return {
+        cleanedTaskText,
+        isFailure: resultText
+            ? KNOWN_AGENT_FAILURE_PATTERNS.some((pattern) => pattern.test(resultText))
+            : false,
+    };
+}
 function resolveAgentHandoffSettings(cfg) {
     const handoffCfg = cfg?.channels?.feishu?.agentHandoff ?? {};
     const parsedMaxRounds = Number(handoffCfg.maxRounds);
@@ -93,6 +122,9 @@ function resolveAgentHandoffSettings(cfg) {
         completeTemplate: typeof handoffCfg.completeTemplate === 'string' && handoffCfg.completeTemplate.trim()
             ? handoffCfg.completeTemplate
             : DEFAULT_AGENT_HANDOFF_COMPLETE_TEMPLATE,
+        failureTemplate: typeof handoffCfg.failureTemplate === 'string' && handoffCfg.failureTemplate.trim()
+            ? handoffCfg.failureTemplate
+            : DEFAULT_AGENT_HANDOFF_FAILED_TEMPLATE,
     };
 }
 function buildAgentHandoffTaskText(params) {
@@ -109,9 +141,11 @@ function buildAgentHandoffTaskText(params) {
     });
 }
 function buildAgentReturnTaskText(params) {
-    const { sourceDisplayName, cleanedTaskText, handoffRound, maxRounds, sourceAgentId } = params;
-    const taskBody = cleanedTaskText || '下游 agent 已完成当前任务，但没有输出可回传的正文。';
-    return renderAgentHandoffTemplate(DEFAULT_AGENT_HANDOFF_RETURN_TEMPLATE, {
+    const { sourceDisplayName, cleanedTaskText, handoffRound, maxRounds, sourceAgentId, isFailure } = params;
+    const taskBody = cleanedTaskText || (isFailure
+        ? '下游 agent 执行失败，但没有返回更详细的错误信息。'
+        : '下游 agent 已完成当前任务，但没有输出可回传的正文。');
+    return renderAgentHandoffTemplate(isFailure ? DEFAULT_AGENT_HANDOFF_FAILURE_RETURN_TEMPLATE : DEFAULT_AGENT_HANDOFF_RETURN_TEMPLATE, {
         sourceDisplayName,
         sourceAgentId,
         handoffRound,
@@ -127,7 +161,12 @@ async function sendAgentHandoffStatusMessage(params) {
     }
     const handoffRound = Math.max(1, syntheticMeta?.handoffDepth ?? 1);
     const currentDisplayName = dc.account.name ?? dc.route.agentId;
-    const text = renderAgentHandoffTemplate(phase === 'accepted' ? handoffSettings.receiptTemplate : handoffSettings.completeTemplate, {
+    const template = phase === 'accepted'
+        ? handoffSettings.receiptTemplate
+        : phase === 'failed'
+            ? handoffSettings.failureTemplate
+            : handoffSettings.completeTemplate;
+    const text = renderAgentHandoffTemplate(template, {
         phase,
         handoffRound,
         maxRounds: handoffSettings.maxRounds,
@@ -291,7 +330,7 @@ async function dispatchAgentMentionHandoffs(params) {
     }
 }
 async function dispatchAgentResultReturn(params) {
-    const { dc, chatHistories, completedReplyText, completedHandoffText, historyLimit, replyToMessageId, syntheticMeta } = params;
+    const { dc, chatHistories, completedReplyText, completedHandoffText, historyLimit, replyToMessageId, syntheticMeta, handoffOutcome } = params;
     const returnChain = getSyntheticReturnChain(syntheticMeta);
     const notifySource = returnChain[0];
     if (!dc.isGroup || !notifySource) {
@@ -314,12 +353,17 @@ async function dispatchAgentResultReturn(params) {
     const sourceGroupConfig = resolveFeishuGroupConfig({ cfg: sourceAccount.config, groupId: dc.ctx.chatId });
     const sourceDefaultGroupConfig = sourceAccount.config?.groups?.['*'];
     const currentDisplayName = dc.account.name ?? dc.route.agentId;
+    const outcome = handoffOutcome ?? resolveAgentOutcome({
+        completedReplyText,
+        completedHandoffText,
+    });
     const returnText = buildAgentReturnTaskText({
         sourceDisplayName: currentDisplayName,
-        cleanedTaskText: completedHandoffText?.trim() || completedReplyText?.trim(),
+        cleanedTaskText: outcome.cleanedTaskText,
         handoffRound,
         maxRounds: handoffSettings.maxRounds,
         sourceAgentId: dc.route.agentId,
+        isFailure: outcome.isFailure,
     });
     const handoffPath = Array.isArray(syntheticMeta?.handoffPath) ? syntheticMeta.handoffPath : [];
     const nextPath = handoffPath.includes(dc.route.agentId)
@@ -471,11 +515,17 @@ async function dispatchNormalMessage(dc, ctxPayload, chatHistories, historyKey, 
         }
         dc.log(`feishu[${dc.account.accountId}]: dispatch complete (queuedFinal=${queuedFinal}, replies=${counts.final})`);
         log.info(`dispatch complete (replies=${counts.final}, elapsed=${ticketElapsed()}ms)`);
+        const completedReplyText = getCompletedReplyText?.() ?? '';
+        const completedHandoffText = getCompletedHandoffText?.() ?? '';
+        const handoffOutcome = resolveAgentOutcome({
+            completedReplyText,
+            completedHandoffText,
+        });
         await dispatchAgentMentionHandoffs({
             dc,
             chatHistories,
-            completedReplyText: getCompletedReplyText?.() ?? '',
-            completedHandoffText: getCompletedHandoffText?.() ?? '',
+            completedReplyText,
+            completedHandoffText,
             completedMentionTargets: getCompletedMentionTargets?.() ?? [],
             historyLimit,
             replyToMessageId,
@@ -484,17 +534,18 @@ async function dispatchNormalMessage(dc, ctxPayload, chatHistories, historyKey, 
         await dispatchAgentResultReturn({
             dc,
             chatHistories,
-            completedReplyText: getCompletedReplyText?.() ?? '',
-            completedHandoffText: getCompletedHandoffText?.() ?? '',
+            completedReplyText,
+            completedHandoffText,
             historyLimit,
             replyToMessageId,
             syntheticMeta,
+            handoffOutcome,
         });
         if (getImmediateNotifySource(syntheticMeta) && handoffSettings.autoComplete) {
             await sendAgentHandoffStatusMessage({
                 dc,
                 replyToMessageId,
-                phase: 'completed',
+                phase: handoffOutcome.isFailure ? 'failed' : 'completed',
                 syntheticMeta,
                 handoffSettings,
             });

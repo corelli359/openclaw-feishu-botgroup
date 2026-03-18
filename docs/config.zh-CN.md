@@ -11,18 +11,20 @@
 - 最大转交轮次
 - 自动回执
 - 自动完成通知
+- 自动失败通知
 - synthetic task 的提示模板
 
 如果你使用 `init-config` 生成的本地配置，合并时还会补齐 bot 的可见名称，方便在群里直接使用别名 `@bot`。这里的 `name` 表示飞书里展示出来的 bot 名称。
 
 ## 字段
 
-- `maxRounds`：最多允许多少轮 synthetic handoff，超过后停止继续转交
+- `maxRounds`：最多允许多少层 synthetic handoff，超过后停止继续转交；它是系统深度限制，不是任务编号
 - `autoReceipt`：下游 bot 接到任务后，是否自动通知上游 bot“已收到”
 - `autoComplete`：下游 bot 完成当前链路后，是否自动通知上游 bot“已完成”
 - `taskTemplate`：注入给下游 bot 的系统提示模板
 - `receiptTemplate`：“已收到”状态消息模板
 - `completeTemplate`：“已完成”状态消息模板
+- `failureTemplate`：“处理失败”状态消息模板
 
 ## 别名映射
 
