@@ -196,7 +196,7 @@ async function main() {
   if (process.env.OPENCLAW_BOTGROUP_SETUP !== "1") {
     console.log("");
     console.log("Next step:");
-    console.log(`  node bin/openclaw-botgroup.js merge-config ${targetPath} ${outputPath}`);
+    console.log(`  node bin/openclaw-feishu-botgroup.js merge-config ${targetPath} ${outputPath}`);
   }
 }
 

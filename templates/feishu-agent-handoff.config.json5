@@ -1,12 +1,12 @@
 {
   "agents": {
-    // Use `openclaw-botgroup init-config` to scaffold agent names from your real config.
+    // Use `openclaw-feishu-botgroup init-config` to scaffold agent names from your real config.
     "list": []
   },
 
   "channels": {
     "feishu": {
-      // Use `openclaw-botgroup init-config` to scaffold Feishu account names from your real config.
+      // Use `openclaw-feishu-botgroup init-config` to scaffold Feishu account names from your real config.
       "accounts": {},
 
       "agentHandoff": {

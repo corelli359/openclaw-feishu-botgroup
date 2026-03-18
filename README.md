@@ -45,19 +45,19 @@ npx openclaw-feishu-botgroup setup
 For local development:
 
 ```bash
-node bin/openclaw-botgroup.js setup
+node bin/openclaw-feishu-botgroup.js setup
 ```
 
 ## Commands
 
 ```bash
-openclaw-botgroup setup
-openclaw-botgroup install
-openclaw-botgroup init-config
-openclaw-botgroup install --openclaw-home ~/.openclaw --no-restart
-openclaw-botgroup merge-config
-openclaw-botgroup print-config-template
-openclaw-botgroup print-agent-template
+openclaw-feishu-botgroup setup
+openclaw-feishu-botgroup install
+openclaw-feishu-botgroup init-config
+openclaw-feishu-botgroup install --openclaw-home ~/.openclaw --no-restart
+openclaw-feishu-botgroup merge-config
+openclaw-feishu-botgroup print-config-template
+openclaw-feishu-botgroup print-agent-template
 ```
 
 - `setup`: recommended entry point; patches the plugin, discovers current bots/accounts, scaffolds a local handoff config, and merges it back into `openclaw.json`
@@ -70,7 +70,7 @@ openclaw-botgroup print-agent-template
 ## Recommended Setup
 
 1. Install `openclaw-lark` using the official Feishu guide.
-2. Run `node bin/openclaw-botgroup.js setup`.
+2. Run `npx openclaw-feishu-botgroup setup`.
 3. During initialization, confirm or fill in each bot's visible name in the Feishu group.
 4. Copy `templates/agent-collaboration.AGENTS.md` into your agent prompt setup.
 5. Restart the gateway.

@@ -1,8 +1,8 @@
 # Changelog
 
-## 0.1.1
+## 0.1.2
 
-- Added `openclaw-feishu-botgroup` bin alias so `npx openclaw-feishu-botgroup ...` works reliably
+- Switched the published CLI name to `openclaw-feishu-botgroup` and removed the old alias
 - Normalized npm repository metadata
 - Included README screenshot assets in the published package
 

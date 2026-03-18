@@ -7,8 +7,8 @@
 ## 当前状态
 
 - 包名：`openclaw-feishu-botgroup`
-- CLI 命令：`openclaw-botgroup`
-- 当前版本：`0.1.1`
+- CLI 命令：`openclaw-feishu-botgroup`
+- 当前版本：`0.1.2`
 - `npm pack --dry-run` 已通过
 - `npm view openclaw-feishu-botgroup version` 返回 `404`
 
@@ -38,7 +38,7 @@
 
 已检查的关键文件包括：
 
-- `bin/openclaw-botgroup.js`
+- `bin/openclaw-feishu-botgroup.js`
 - `scripts/init-feishu-agent-handoff-config.js`
 - `scripts/merge-feishu-agent-handoff-config.js`
 - `remote_patch/openclaw-lark/src/messaging/inbound/dispatch.js`
@@ -127,7 +127,7 @@ NPM_CONFIG_CACHE=/tmp/openclaw-npm-cache npm pack --dry-run
 
 ### 4. 确认版本号
 
-当前版本是 `0.1.1`。如果你准备发布这一版，可以直接发布；如果还想补小改动，先升版本：
+当前版本是 `0.1.2`。如果你准备发布这一版，可以直接发布；如果还想补小改动，先升版本：
 
 ```bash
 npm version patch
@@ -174,13 +174,13 @@ npx openclaw-feishu-botgroup setup
 
 ```bash
 npm i -g openclaw-feishu-botgroup
-openclaw-botgroup setup
+openclaw-feishu-botgroup setup
 ```
 
-注意这里有两个名字：
+这里 npm 包名和 CLI 命令名保持一致：
 
 - npm 包名：`openclaw-feishu-botgroup`
-- 安装后的 CLI 命令：`openclaw-botgroup`
+- CLI 命令：`openclaw-feishu-botgroup`
 
 ## 建议你在正式发布前再确认一次的事项
 

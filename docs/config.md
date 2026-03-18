@@ -2,7 +2,7 @@
 
 [中文文档](./config.zh-CN.md)
 
-`openclaw-feishu-botgroup` merges a small `agentHandoff` block into `channels.feishu.agentHandoff`. The recommended flow is not to hand-edit the repository template directly, but to run `openclaw-botgroup setup` or `openclaw-botgroup init-config` so the local config is scaffolded from your current bots/accounts first.
+`openclaw-feishu-botgroup` merges a small `agentHandoff` block into `channels.feishu.agentHandoff`. The recommended flow is not to hand-edit the repository template directly, but to run `openclaw-feishu-botgroup setup` or `openclaw-feishu-botgroup init-config` so the local config is scaffolded from your current bots/accounts first.
 
 ## Purpose
 
@@ -39,6 +39,6 @@ These visible names are used for `@agent` matching in group chat.
 ## Recommended Flow
 
 1. Install the official Feishu `openclaw-lark` plugin first.
-2. Run `openclaw-botgroup setup`.
+2. Run `openclaw-feishu-botgroup setup`.
 3. During initialization, the tool reads your current `openclaw.json`, discovers existing bots/accounts, and prompts for visible Feishu names.
 4. The tool writes a local handoff config to `~/.openclaw/feishu-agent-handoff.config.json`, then merges it back into `openclaw.json`.

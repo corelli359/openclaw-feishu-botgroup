@@ -2,7 +2,7 @@
 
 [English](./config.md)
 
-`openclaw-feishu-botgroup` 会把一小段 `agentHandoff` 配置合并到 `channels.feishu.agentHandoff`。推荐流程不是直接手改模板，而是先运行 `openclaw-botgroup setup` 或 `openclaw-botgroup init-config`，从当前配置里发现已有 bot/账号后再生成本地配置。
+`openclaw-feishu-botgroup` 会把一小段 `agentHandoff` 配置合并到 `channels.feishu.agentHandoff`。推荐流程不是直接手改模板，而是先运行 `openclaw-feishu-botgroup setup` 或 `openclaw-feishu-botgroup init-config`，从当前配置里发现已有 bot/账号后再生成本地配置。
 
 ## 作用
 
@@ -38,6 +38,6 @@
 ## 推荐旅程
 
 1. 先安装飞书官方 `openclaw-lark` 插件。
-2. 再运行 `openclaw-botgroup setup`。
+2. 再运行 `openclaw-feishu-botgroup setup`。
 3. 初始化阶段会读取当前 `openclaw.json`，发现已有 bot/账号，并让你填写群内展示名。
 4. 工具会把本地 handoff 配置写到 `~/.openclaw/feishu-agent-handoff.config.json`，然后再合并回 `openclaw.json`。

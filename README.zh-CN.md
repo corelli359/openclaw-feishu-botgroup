@@ -45,19 +45,19 @@ npx openclaw-feishu-botgroup setup
 如果你在本地仓库中调试：
 
 ```bash
-node bin/openclaw-botgroup.js setup
+node bin/openclaw-feishu-botgroup.js setup
 ```
 
 ## 常用命令
 
 ```bash
-openclaw-botgroup setup
-openclaw-botgroup install
-openclaw-botgroup init-config
-openclaw-botgroup install --openclaw-home ~/.openclaw --no-restart
-openclaw-botgroup merge-config
-openclaw-botgroup print-config-template
-openclaw-botgroup print-agent-template
+openclaw-feishu-botgroup setup
+openclaw-feishu-botgroup install
+openclaw-feishu-botgroup init-config
+openclaw-feishu-botgroup install --openclaw-home ~/.openclaw --no-restart
+openclaw-feishu-botgroup merge-config
+openclaw-feishu-botgroup print-config-template
+openclaw-feishu-botgroup print-agent-template
 ```
 
 - `setup`：推荐入口；按顺序完成 patch、发现当前 bot/账号、生成本地 handoff 配置并合并回 `openclaw.json`
@@ -70,7 +70,7 @@ openclaw-botgroup print-agent-template
 ## 推荐使用步骤
 
 1. 先按飞书官方说明安装 `openclaw-lark`。
-2. 执行 `node bin/openclaw-botgroup.js setup`。
+2. 执行 `npx openclaw-feishu-botgroup setup`。
 3. 在初始化阶段确认或填写每个 bot 在飞书群里的展示名。
 4. 把 `templates/agent-collaboration.AGENTS.md` 中的规则放进各个 agent 的提示词。
 5. 重启 gateway。

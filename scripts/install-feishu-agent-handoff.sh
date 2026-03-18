@@ -97,10 +97,10 @@ if [[ "${OPENCLAW_BOTGROUP_SETUP:-0}" != "1" ]]; then
   echo
   echo "Suggested next steps:"
   echo "1. Initialize a local handoff config from your current OpenClaw bots/accounts"
-  echo "   node bin/openclaw-botgroup.js init-config"
+  echo "   node bin/openclaw-feishu-botgroup.js init-config"
   echo "2. Review the generated ~/.openclaw/feishu-agent-handoff.config.json"
   echo "3. Merge that local config into ~/.openclaw/openclaw.json"
-  echo "   node bin/openclaw-botgroup.js merge-config ~/.openclaw/openclaw.json ~/.openclaw/feishu-agent-handoff.config.json"
+  echo "   node bin/openclaw-feishu-botgroup.js merge-config ~/.openclaw/openclaw.json ~/.openclaw/feishu-agent-handoff.config.json"
   echo "4. Add templates/agent-collaboration.AGENTS.md rules into each agent prompt file"
   echo "5. Run: openclaw gateway status --deep"
 fi

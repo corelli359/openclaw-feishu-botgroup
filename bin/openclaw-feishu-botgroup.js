@@ -11,6 +11,7 @@ const initScript = path.join(rootDir, "scripts", "init-feishu-agent-handoff-conf
 const mergeScript = path.join(rootDir, "scripts", "merge-feishu-agent-handoff-config.js");
 const configTemplate = path.join(rootDir, "templates", "feishu-agent-handoff.config.json");
 const agentTemplate = path.join(rootDir, "templates", "agent-collaboration.AGENTS.md");
+const defaultCommandName = "openclaw-feishu-botgroup";
 
 function expandHome(input) {
   if (!input.startsWith("~")) {
@@ -19,17 +20,26 @@ function expandHome(input) {
   return path.join(os.homedir(), input.slice(1));
 }
 
+function resolveCommandName() {
+  const invokedPath = process.argv[1];
+  if (!invokedPath) {
+    return defaultCommandName;
+  }
+  return path.basename(invokedPath) || defaultCommandName;
+}
+
 function printHelp() {
-  console.log(`openclaw-botgroup
+  const commandName = resolveCommandName();
+  console.log(`${commandName}
 
 Usage:
-  openclaw-botgroup setup [--openclaw-home PATH] [--plugin-dir PATH] [--no-restart] [target-config] [output-config]
-  openclaw-botgroup install [--openclaw-home PATH] [--plugin-dir PATH] [--no-restart]
-  openclaw-botgroup init-config [target-config] [output-config]
-  openclaw-botgroup merge-config [target-config] [template-config]
-  openclaw-botgroup print-config-template
-  openclaw-botgroup print-agent-template
-  openclaw-botgroup help
+  ${commandName} setup [--openclaw-home PATH] [--plugin-dir PATH] [--no-restart] [target-config] [output-config]
+  ${commandName} install [--openclaw-home PATH] [--plugin-dir PATH] [--no-restart]
+  ${commandName} init-config [target-config] [output-config]
+  ${commandName} merge-config [target-config] [template-config]
+  ${commandName} print-config-template
+  ${commandName} print-agent-template
+  ${commandName} help
 
 Notes:
   install requires an existing official Feishu openclaw-lark plugin install.
