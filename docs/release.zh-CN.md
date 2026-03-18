@@ -8,7 +8,7 @@
 
 - 包名：`openclaw-feishu-botgroup`
 - CLI 命令：`openclaw-botgroup`
-- 当前版本：`0.1.0`
+- 当前版本：`0.1.1`
 - `npm pack --dry-run` 已通过
 - `npm view openclaw-feishu-botgroup version` 返回 `404`
 
@@ -127,7 +127,7 @@ NPM_CONFIG_CACHE=/tmp/openclaw-npm-cache npm pack --dry-run
 
 ### 4. 确认版本号
 
-当前版本是 `0.1.0`。如果你准备发布第一版，可以直接发布；如果还想补小改动，先升版本：
+当前版本是 `0.1.1`。如果你准备发布这一版，可以直接发布；如果还想补小改动，先升版本：
 
 ```bash
 npm version patch
@@ -191,7 +191,7 @@ openclaw-botgroup setup
 第三点要单独强调一下：
 
 - 当前 README 使用的是相对路径图片：`./assets/1.png`、`./assets/2.png`
-- 当前 `package.json` 的 `files` 没有包含 `assets`
+- 当前建议把 `assets` 一并纳入 npm 包内容
 
 这不影响 GitHub 仓库展示，但发布到 npm 后，README 图片是否完全按预期显示，建议你在第一版发布后立即实测。
 
